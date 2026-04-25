@@ -10,8 +10,9 @@ func TestPowerH(t *testing.T) {
 	}
 
 	testCases := []test{
-		// {Base: 2, Power: -2, ExpectedResult: 0.25},
-		// {Base: 2, Power: -1, ExpectedResult: 0.5},
+		{Base: 2, Power: -2, ExpectedResult: 0.25},
+		{Base: 2, Power: -1, ExpectedResult: 0.5},
+		{Base: 2, Power: -4, ExpectedResult: float64(1) / 16},
 		{Base: 2, Power: 0, ExpectedResult: 1},
 		{Base: 2, Power: 1, ExpectedResult: 2},
 		{Base: 2, Power: 2, ExpectedResult: 4},
