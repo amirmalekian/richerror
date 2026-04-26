@@ -1,127 +1,122 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"sort"
-	"strings"
+	"os"
+	"reflect_and_interfaces/log"
+	"reflect_and_interfaces/richerror"
+	"strconv"
 )
-
-func main() {
-
-	name := "amirhossein"
-	stringReader := strings.NewReader(name)
-
-	// scanner := bufio.NewScanner(os.Stdin)
-	scanner := bufio.NewScanner(stringReader)
-
-	scanner.Scan()
-	fmt.Println("output")
-	fmt.Println(scanner.Text())
-
-	var scores = Int{6, 9, 12, 59, 3, 103, 56}
-
-	fmt.Println("before sort:", scores)
-
-	sort.Sort(scores)
-
-	fmt.Println("after sort:", scores)
-
-	usersMap := userStore{
-		3: {ID: 3, Name: "Ali"},
-		1: {ID: 1, Name: "Zahra"},
-		4: {ID: 4, Name: "Mahsa"},
-		2: {ID: 2, Name: "Reza"},
-	}
-
-	fmt.Println("\nBefore sort (map iteration order is random):")
-	for id, u := range usersMap {
-		fmt.Printf("ID:%d Name:%s\n", id, u.Name)
-	}
-
-	us := userSorter{data: usersMap}
-
-	for k := range usersMap {
-		us.keys = append(us.keys, k)
-	}
-
-	sort.Sort(us)
-
-	fmt.Println("\nAfter sort by Name (map view):")
-	for _, k := range us.keys {
-		u := usersMap[k]
-		fmt.Printf("ID:%d Name:%s\n", u.ID, u.Name)
-	}
-
-	var keys []uint
-	for k := range usersMap {
-		keys = append(keys, k)
-	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		// return keys[i] < keys[j]
-		return usersMap[keys[i]].Name < usersMap[keys[j]].Name
-	})
-
-	fmt.Println("\nSort with sort.Slice() without using less, len, swap fn:")
-	for _, k := range keys {
-		// fmt.Println(usersMap[k])
-		fmt.Printf("ID:%d Name:%s\n", usersMap[k].ID, usersMap[k].Name)
-
-	}
-}
-
-type Int []int
-
-func (in Int) Len() int {
-	return len(in)
-}
-
-func (in Int) Less(i, j int) bool {
-	return in[i] < in[j]
-}
-
-func (in Int) Swap(i, j int) {
-	in[i], in[j] = in[j], in[i]
-}
-
-// func (user userStore) Len() int {
-// 	return len(user)
-// }
-
-// func (user userStore) Less(i, j int) bool {
-
-// }
-
-// func (user userStore) Swap(i, j int) {
-
-// }
 
 type User struct {
 	ID   uint
 	Name string
 }
 
-type userStore map[uint]User
-
-type userSorter struct {
-	data userStore
-	keys []uint
+func (u User) String() string {
+	return fmt.Sprintf("User{id: %d, name: %s}", u.ID, u.Name)
 }
 
-func (us userSorter) Len() int {
-	return len(us.keys)
+func main() {
+	logger := log.Log{}
+
+	u := User{ID: 123, Name: "Amirhossein"}
+	fmt.Println(u)
+	// fmt.Stringer
+
+	_, OErr := os.OpenFile("./storage/data.txt", os.O_RDWR, 0777)
+	if OErr != nil {
+		logger.Append(OErr)
+
+		fmt.Println(OErr.Error())
+	}
+
+	user, gErr := getUserByID(0)
+	// gErr.Error()
+	if gErr != nil {
+		// type assertion => برای اینکه به تایپ واقعی برسیم ، به اون کانکریت تایپه ، کانکریت ولیو که پاس داده شده به عنوان اینترفیس برسیم
+		rErr, ok := gErr.(*richerror.RichError)
+		if ok {
+			logger.Append(rErr)
+		} else {
+			logger.Append(&richerror.RichError{
+				Message:   gErr.Error(),
+				MetaData:  nil,
+				Operation: "unknown",
+			})
+		}
+		// fmt.Println(err.Error())
+		// logger.Errors = append(logger.Errors, gErr)
+		// logger.Append(gErr)
+	}
+
+	_, g2Err := getUserByIDTwo(0)
+	fmt.Println("operation", g2Err.Operation, g2Err.Message, g2Err.MetaData)
+
+	if g2Err != nil {
+		// fmt.Println(err.Error())
+		// logger.Errors = append(logger.Errors, gErr)
+		logger.Append(g2Err)
+
+	}
+
+	_, g3Err := getUserByIDThree(0)
+	if g3Err != nil {
+		logger.Append(g3Err)
+	}
+	 
+
+	logger.Save()
+
+	fmt.Println("user", user)
 }
 
-func (us userSorter) Less(i, j int) bool {
-	u1 := us.data[us.keys[i]]
-	u2 := us.data[us.keys[j]]
+// abstraction type
+func getUserByID(id int) (User, error) {
+	if id == 0 {
+		return User{}, &richerror.RichError{
+			Message: "id is not valid",
+			MetaData: map[string]string{
+				"id": strconv.Itoa(id),
+			},
+			Operation: "getUserByID",
+		}
+	}
 
-	return u1.Name < u2.Name
-	// return u1.ID < u2.ID
+	return User{}, nil
 }
 
-func (us userSorter) Swap(i, j int) {
-	us.keys[i], us.keys[j] = us.keys[j], us.keys[i]
+// concrete type تایپ واقعی
+func getUserByIDTwo(id int) (User, *richerror.RichError) {
+	if id == 0 {
+		return User{}, &richerror.RichError{
+			Message: "id is not valid",
+			MetaData: map[string]string{
+				"id": strconv.Itoa(id),
+			},
+			Operation: "getUserByID",
+		}
+	}
 
+	return User{}, nil
+}
+
+type simpleError struct {
+	Output    string
+	Operation string
+}
+
+func (s simpleError) Error() string {
+	return "output: " + s.Output + ", operation: " + s.Operation
+}
+
+func getUserByIDThree(id int) (User, error) {
+	if id == 0 {
+		return User{}, &simpleError{
+			Output: "id is 0",
+			Operation: "getUserByIDThree",
+		}
+	}
+
+	return User{}, nil
 }
