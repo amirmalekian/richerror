@@ -51,9 +51,15 @@ func (l *Log) Save() {
 	// 	fmt.Printf("i: %d, operation: %s, message: %s, meta-data: %+v\n",
 	// 		i, e.Operation, e.Message, e.MetaData)
 	// }
+	var fileHandler *os.File
+	if f, oErr := os.OpenFile("errors.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777); oErr != nil {
+		fmt.Println("Error opening file:", oErr)
 
-	f, _ := os.OpenFile("errors.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	defer f.Close()
+		return
+	} else {
+		fileHandler = f
+	}
+	defer fileHandler.Close()
 
 	data, _ := json.Marshal(l.Errors)
 	f.Write(data)
