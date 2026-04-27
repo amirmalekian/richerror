@@ -1,37 +1,42 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"reflect"
-	"reflect_and_interfaces/richerror"
-	"time"
+	"strconv"
 )
 
-func main() {
-	rErr := richerror.RichError{
-		Message: "id is not valid",
-		MetaData: map[string]string{
-			"id": "0",
-		},
-		Operation: "main",
-		Time:      time.Now(),
-	}
+func String(err error) string {
+	return fmt.Sprintln(err.Error())
+}
 
-	value := reflect.ValueOf(rErr)
-	fmt.Println("kind", value.Kind())
-	fmt.Println("type", reflect.TypeOf(rErr))
+func StringTwo(err error) string {
+	return fmt.Sprintln(err)
+}
 
-	switch value.Kind() {
-	case reflect.Struct:
-		fmt.Println("number of field", value.NumField())
-		for i := 0; i < value.NumField(); i++ {
-			fieldValue := value.Field(i)
-			fmt.Printf("field index: %d, type: %s, field-name: %s, value: %s\n", i, fieldValue.Type(), value.Type().Field(i).Name, fieldValue.Interface())
-			//fieldType := value.Type().Field(i)
+type simpleData struct {
+	ID    uint
+	Name  string
+	Email string
+}
 
-		}
-	default:
-		fmt.Println("kind", value.Kind())
-	}
+func (s simpleData) MarshalJSON() ([]byte, error) {
+	//return []byte(fmt.Sprintf(`{"id": %d, "name": "%s", "email": "%s"}`, s.ID, s.Name, s.Email)), nil
+	return []byte(`{"id":` + strconv.Itoa(int(s.ID)) + `, "name": "` + s.Name + `", "email": "` + s.Email + `"}`), nil
+	//instead of strconv.Itoa(int(s.ID)) => strconv.FormatUint(uint64(s.ID), 10)
 
+}
+
+type simpleDataTwo struct {
+	ID    uint
+	Name  string
+	Email string
+}
+
+func Json(data simpleData) ([]byte, error) {
+	return json.Marshal(data)
+}
+
+func JsonTwo(data simpleDataTwo) ([]byte, error) {
+	return json.Marshal(data)
 }
