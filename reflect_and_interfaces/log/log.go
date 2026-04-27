@@ -58,10 +58,10 @@ func (l *Log) Save() {
 		return
 	} else {
 		fileHandler = f
+		defer fileHandler.Close()
 	}
-	defer fileHandler.Close()
 
 	data, _ := json.Marshal(l.Errors)
-	f.Write(data)
+	fileHandler.Write(data)
 
 }
