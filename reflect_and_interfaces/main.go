@@ -5,7 +5,9 @@ import (
 	"os"
 	"reflect_and_interfaces/log"
 	"reflect_and_interfaces/richerror"
+	"reflect_and_interfaces/simpleerror"
 	"strconv"
+	"time"
 )
 
 type User struct {
@@ -27,24 +29,28 @@ func main() {
 	_, OErr := os.OpenFile("./storage/data.txt", os.O_RDWR, 0777)
 	if OErr != nil {
 		logger.Append(OErr)
-
+		// fmt.Println(OErr.Error())
 		fmt.Println(OErr.Error())
+
+		fmt.Println(OErr)
 	}
 
 	user, gErr := getUserByID(0)
 	// gErr.Error()
 	if gErr != nil {
-		// type assertion => برای اینکه به تایپ واقعی برسیم ، به اون کانکریت تایپه ، کانکریت ولیو که پاس داده شده به عنوان اینترفیس برسیم
-		rErr, ok := gErr.(*richerror.RichError)
-		if ok {
-			logger.Append(rErr)
-		} else {
-			logger.Append(&richerror.RichError{
-				Message:   gErr.Error(),
-				MetaData:  nil,
-				Operation: "unknown",
-			})
-		}
+		logger.Append(gErr)
+		fmt.Println(gErr.Error())
+		// // type assertion => برای اینکه به تایپ واقعی برسیم ، به اون کانکریت تایپه ، کانکریت ولیو که پاس داده شده به عنوان اینترفیس برسیم
+		// rErr, ok := gErr.(*richerror.RichError)
+		// if ok {
+		// 	logger.Append(rErr)
+		// } else {
+		// 	logger.Append(&richerror.RichError{
+		// 		Message:   gErr.Error(),
+		// 		MetaData:  nil,
+		// 		Operation: "unknown",
+		// 	})
+		// }
 		// fmt.Println(err.Error())
 		// logger.Errors = append(logger.Errors, gErr)
 		// logger.Append(gErr)
@@ -57,14 +63,16 @@ func main() {
 		// fmt.Println(err.Error())
 		// logger.Errors = append(logger.Errors, gErr)
 		logger.Append(g2Err)
+		fmt.Println(g2Err.Error())
 
 	}
 
 	_, g3Err := getUserByIDThree(0)
 	if g3Err != nil {
 		logger.Append(g3Err)
+		fmt.Println(g3Err.Error())
+
 	}
-	 
 
 	logger.Save()
 
@@ -80,6 +88,7 @@ func getUserByID(id int) (User, error) {
 				"id": strconv.Itoa(id),
 			},
 			Operation: "getUserByID",
+			Time:      time.Now(),
 		}
 	}
 
@@ -95,25 +104,17 @@ func getUserByIDTwo(id int) (User, *richerror.RichError) {
 				"id": strconv.Itoa(id),
 			},
 			Operation: "getUserByID",
+			Time:      time.Now(),
 		}
 	}
 
 	return User{}, nil
 }
 
-type simpleError struct {
-	Output    string
-	Operation string
-}
-
-func (s simpleError) Error() string {
-	return "output: " + s.Output + ", operation: " + s.Operation
-}
-
 func getUserByIDThree(id int) (User, error) {
 	if id == 0 {
-		return User{}, &simpleError{
-			Output: "id is 0",
+		return User{}, &simpleerror.SimpleError{
+			Output:    "id is 0",
 			Operation: "getUserByIDThree",
 		}
 	}
