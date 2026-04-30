@@ -6,6 +6,28 @@ import (
 	"strconv"
 )
 
+func main() {
+	s1 := simpleData{
+		ID:    10,
+		Name:  "amirhossein",
+		Email: "malekian",
+	}
+
+	s2 := simpleDataTwo{
+		ID:    10,
+		Name:  "amirhossein",
+		Email: "malekian",
+	}
+
+	fmt.Println(Json(s1))
+	fmt.Println(JsonTwo(s2))
+	b1, _ := Json(s1)
+	fmt.Printf("%s\n", b1)
+
+	b2, _ := Json(s1)
+	fmt.Printf("%s\n", b2)
+}
+
 func String(err error) string {
 	return fmt.Sprintln(err.Error())
 }
